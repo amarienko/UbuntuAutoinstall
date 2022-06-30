@@ -2,7 +2,7 @@
 autoinstall:
   # config version 1.9.8
   # Storage: 72G
-  # Swapfile: default
+  # Swapfile: 3G, default location
   version: 1
   refresh-installer:
     update: yes
