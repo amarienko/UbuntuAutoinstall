@@ -173,8 +173,10 @@ autoinstall:
     # apt section
     - curtin in-target --target=/target -- apt update
     - curtin in-target --target=/target -- apt upgrade --yes
+    - curtin in-target --target=/target -- apt install open-vm-tools --yes --no-install-recommends
     - curtin in-target --target=/target -- apt --purge -y --quiet=2 autoremove
     - curtin in-target --target=/target -- apt clean
+    - curtin in-target --target=/target -- apt autoclean
     - echo 'Generating a report of installed packages...'
     - curtin in-target --target=/target -- apt list --installed > /target/root/apt-postinstall-report.txt
     - echo '[ Done ]'
