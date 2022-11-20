@@ -90,16 +90,17 @@ def main():
         "--disk-size",
         action="store",
         required=False,
-        choices=["32", "48", "72"],
-        default="48",
+        choices=["default", "32", "48", "72"],
+        default="default",
         dest="diskSize",
         metavar="DISK_SIZE",
         type=str,
         help=textwrap.dedent(
             """\
-            host or virtual machine disk size in GB. Default disk
-            size  %(default)s  GB will be  used   if  the argument  is not
-            specified. Available values: %(choices)s GBs
+            host or virtual machine disk size in GB or `default`.
+            By default is  interactive mode  will be  used if the
+            argument is not specified.
+            Available values: %(choices)s GBs
             """
         ),
     )
