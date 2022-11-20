@@ -1,41 +1,144 @@
-## python3 -m http.server 8080
-## https://docs.python.org/3/library/http.server.html
-##
+#!/usr/bin/env python3
+"""Python Simple HTTP Server
+
+References:
+https://docs.python.org/3/library/http.server.html
+https://docs.python.org/3/library/argparse.html
+https://docs.python.org/3/howto/argparse.html
+"""
+__version__ = "0.1.2"
+
+import os
+import sys
+import time
+import argparse
+import textwrap
+import functools
 import http.server
 import socketserver
-# Import 'sys' module
-import sys
 
-from urllib.parse import urlparse
-from urllib.parse import parse_qs
 
-host = ""
-if sys.argv[1:]:
-    port = int(sys.argv[1])
-else:
-    port = 8080
+class HTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
+    """Simple HTTP Request Handler
 
-class SimpleServer(http.server.SimpleHTTPRequestHandler):
+    Handler serves files from the current directory and any
+    of its subdirectories.
+    """
+
+    server_version = "Python SimpleHTTP Server"
+    sys_version = ""
+
+    def __init__(self, *args, directory=None, **kwargs):
+        if directory is None:
+            directory = os.getcwd()
+
+        self.directory = os.fspath(directory)
+        super().__init__(*args, directory=self.directory, **kwargs)
 
     def do_GET(self):
-        self.send_response(200, "OK")
-        #self.send_header("Content-type", "text/html")
+        """Serve a `GET` request. Interpreting the request as a path"""
+
+        self.send_response(200, "OK")  # HTTPStatus.OK
+        # self.send_header("Content-type", "text/html")
         self.end_headers()
 
         return http.server.SimpleHTTPRequestHandler.do_GET(self)
 
 
-# Declare object of the class
-webServer = http.server.HTTPServer((host, port), SimpleServer)
+def main():
+    """Simple HTTP Server"""
 
-# Print the URL of the webserver
-print("Web Server serving at port %s" % (port))
+    # Process the input options with `argparse`
+    parser = argparse.ArgumentParser(
+        add_help=True,
+        formatter_class=argparse.RawTextHelpFormatter,
+        epilog="",
+        description=textwrap.dedent(
+            """Python Simple HTTP Server to serve files in a specified directory"""
+        ),
+    )
+    parser.add_argument(
+        "-v",
+        "--version",
+        action="version",
+        version="%(prog)s {}".format(__version__),
+        help=textwrap.dedent(
+            """\
+            show the current script version
+            """
+        ),
+    )
+    parser.add_argument(
+        "-p",
+        "--port",
+        action="store",
+        required=False,
+        default=8080,
+        dest="serverPort",
+        metavar="SERVER_PORT",
+        type=int,
+        help=textwrap.dedent(
+            """\
+            server port. If not specified, the default port `%(default)s`
+            is used. Value must be in the range of non-priviliged
+            TCP/IP ports from 1024 to 65535
+            """
+        ),
+    )
+    parser.add_argument(
+        "-s",
+        "--disk-size",
+        action="store",
+        required=False,
+        choices=["32", "48", "72"],
+        default="48",
+        dest="diskSize",
+        metavar="DISK_SIZE",
+        type=str,
+        help=textwrap.dedent(
+            """\
+            host or virtual machine disk size in GB. Default disk
+            size  %(default)s  GB will be  used   if  the argument  is not
+            specified. Available values: %(choices)s GBs
+            """
+        ),
+    )
 
-try:
+    args = parser.parse_args()
 
-    webServer.serve_forever()
+    serverRoot = os.getcwd() + "/" + args.diskSize
+    serverHost = "0.0.0.0"  # all interfaces by default
+    if args.serverPort in range(1024, 65536):
+        serverPort = int(args.serverPort)
+    else:
+        print(
+            "Incorrect server port number specified: {}!".format(repr(args.serverPort))
+        )
+        print()
+        print(
+            "Value must be in the range of non-priviliged TCP/IP ports\nfrom 1024 to 65535."
+        )
+        print()
+        sys.exit(1)
 
-except KeyboardInterrupt:
+    # requestHandler = HTTPRequestHandler
+    requestHandler = functools.partial(HTTPRequestHandler, directory=serverRoot)
 
-    webServer.server_close()
-    print("The server is stopped.")
+    # Declare HTTP Server object
+    httpServer = http.server.HTTPServer((serverHost, serverPort), requestHandler)
+
+    # Print the URL of the webserver
+    print("HTTP Server serving at {0}:{1}".format(serverHost, serverPort))
+
+    try:
+        httpServer.serve_forever()
+    except KeyboardInterrupt as keyboardInterrupt:
+        print("Stopping HTTP server...", end="")
+        httpServer.server_close()
+        print("\r", end="")
+        time.sleep(0.3)
+        print("{:25s}".format("The server is stopped."))
+
+
+if __name__ == "__main__":
+    sys.exit(main())

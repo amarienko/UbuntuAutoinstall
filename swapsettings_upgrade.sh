@@ -66,8 +66,8 @@ new_swap() {
     sudo truncate -s 0 $swap_file
     if $btrfs; then
         echo "Swap file will be optimized for the 'btrfs' filesystem"
-	sudo chattr +C $swap_file
-	sudo btrfs property set $swap_file compression none
+    sudo chattr +C $swap_file
+    sudo btrfs property set $swap_file compression none
     else
         echo "'btrfs' file system is not used"
     fi
@@ -110,7 +110,7 @@ sysctl_settings() {
     echo -n "🧩 /etc/sysctl.conf update....  "
     sudo cp /etc/sysctl.conf /etc/sysctl.conf.bak
     if [ -f $sysctl_add_file ]; then
-	sudo rm $sysctl_add_file
+    sudo rm $sysctl_add_file
     fi
     sudo touch $sysctl_add_file
     echo "" | sudo tee -a $sysctl_add_file &> /dev/null
