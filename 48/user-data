@@ -2,7 +2,10 @@
 autoinstall:
   # https://cloudinit.readthedocs.io/en/latest/index.html
   # https://cloudinit.readthedocs.io/en/latest/topics/examples.html
-  # config version 1.11.7.1
+  # config version 1.11.7
+  #
+  # Storage size: 48GB
+  #         Swap: 2GB
   #
   id: "ubuntu-server-minimized"
   refresh-installer:
@@ -15,7 +18,6 @@ autoinstall:
   # identity:
   #
   interactive-sections: []
-  #  - storage
   apt:
     disable_components: []
     geoip: true
@@ -87,12 +89,6 @@ autoinstall:
     # renderer: NetworkManager
   storage:
     # https://curtin.readthedocs.io/en/latest/topics/storage.html
-    #
-    # Auto partitions configuration
-    #
-    # layout:
-    #   name: lvm
-    #
     config:
     - ptable: gpt
       path: /dev/sda
@@ -146,9 +142,9 @@ autoinstall:
       type: lvm_volgroup
       id: lvm_volgroup-0
     - name: lv-tmp
-      # `/tmp`
+      # `/tmp` 3G
       volgroup: lvm_volgroup-0
-      size: 3221225472B # 3G
+      size: 3221225472B
       wipe: superblock
       preserve: false
       type: lvm_partition
@@ -159,9 +155,9 @@ autoinstall:
       type: format
       id: format-4
     - name: lv-root
-      # `/`
+      # `/` 33G
       volgroup: lvm_volgroup-0
-      size: 35433480192B # 33G
+      size: 35433480192B
       wipe: superblock
       preserve: false
       type: lvm_partition
@@ -178,7 +174,7 @@ autoinstall:
     - name: lv-home
       # `/home`
       volgroup: lvm_volgroup-0
-      size: -1 # to end of VG free space
+      size: -1 # to end of the partition
       wipe: superblock
       preserve: false
       type: lvm_partition
@@ -208,9 +204,9 @@ autoinstall:
       # https://curtin.readthedocs.io/en/latest/topics/config.html#swap
       swap: 0
       filename: swap.img
-      maxsize: 2097152 # size in bytes by default
+      maxsize: 2147483648B # size in bytes by default
       # "auto" or size in bytes, setting 'size' to 0 will disable swap
-      size: 0
+      size: 1073741824B
       force: false
   resize_rootfs: true
   mounts: []
@@ -242,19 +238,10 @@ autoinstall:
     - jq
     - less
     - nano
-    - netcat
     - open-vm-tools
     - zsh
     - parted
-  snaps:
-    # A list of snaps to install (for test purposes)
-    # https://snapcraft.io/
-    - name: aws-cli
-      channel: v2/edge # <['stable', ['edge'], ['beta']>
-      classic: false
-    - name: powershell
-      channel: latest/stable
-      classic: true
+  snaps: []
   late-commands:
     # `apt` commands
     # Optional. All packages installation command moved to 'packages:' directive
@@ -272,16 +259,6 @@ autoinstall:
     - echo '[ Done ]'
     # `sudoers` commands
     - echo 'sudoers file creation for user - ubuntu...'
-    # Rewritten to a `cat` multiline command
-    #
-    # - "echo '# sudoers file for default system user - ubuntu' > /target/etc/sudoers.d/00-ubuntu"
-    # - "sed -i -e '$a #' /target/etc/sudoers.d/100-ubuntu"
-    # - "sed -i -e '$a # ubuntu - User privilege specification' /target/etc/sudoers.d/100-ubuntu"
-    # - "sed -i -e '$a # Cmnd (Cmd for 1.9+) alias specification (disable - sudo su - command)' /target/etc/sudoers.d/100-ubuntu"
-    # - "sed -i -e '$a Cmd_Alias NO_SU = /usr/bin/su' /target/etc/sudoers.d/100-ubuntu"
-    # - "sed -i -e '$a Cmd_Alias NO_ROOTPW = /usr/bin/passwd [A-Za-z]*, !/usr/bin/passwd *root*' /target/etc/sudoers.d/100-ubuntu"
-    # - "sed -i -e '$a # ubuntu - User privilege specification' /target/etc/sudoers.d/100-ubuntu"
-    # - "sed -i -e '$a ubuntu ALL=(ALL:ALL) NOPASSWD:ALL, !NO_SU, NO_ROOTPW' /target/etc/sudoers.d/100-ubuntu"
     - |
         cat > /target/etc/sudoers.d/100-ubuntu <<EOF
         # File created with autoinstall. Timestamp: $(date +%H%M.%F@%T%Z)
@@ -306,12 +283,6 @@ autoinstall:
     - echo '[ Done ]'
     # `sshd` commands
     - echo 'updating sshd configuration...'
-    # Disabled to not change default system files
-    #
-    # - 'sed -i.~ -e "s|^#PermitRootLogin.*|PermitRootLogin no|" /target/etc/ssh/sshd_config'
-    # - 'sed -i -e "s/^#PermitEmptyPasswords.*/PermitEmptyPasswords no/" /target/etc/ssh/sshd_config'
-    # - 'sed -i -e "s/^#PubkeyAuthentication.*/PubkeyAuthentication yes/" /target/etc/ssh/sshd_config'
-    #
     - |
         cat > /target/etc/ssh/sshd_config.d/100-autoinstall.conf <<EOF
         # File created with autoinstall. Timestamp: $(date +%H%M.%F@%T%Z)
@@ -362,7 +333,7 @@ autoinstall:
           cat > /etc/hosts <<EOF
           # File created with autoinstall. Timestamp: ${timestamp}
           127.0.0.1 localhost
-          127.0.1.1 ${fqdn_string} ${HOSTNAME}
+          127.0.1.1 ${HOSTNAME}
 
           # The following lines are desirable for IPv6 capable hosts
           ::1 localhost ip6-localhost ip6-loopback

@@ -2,7 +2,10 @@
 autoinstall:
   # https://cloudinit.readthedocs.io/en/latest/index.html
   # https://cloudinit.readthedocs.io/en/latest/topics/examples.html
-  # config version 1.11.7.1
+  # config version 1.11.7
+  #
+  # Storage size: 32GB
+  #         Swap: 2GB
   #
   id: "ubuntu-server-minimized"
   refresh-installer:
@@ -15,7 +18,6 @@ autoinstall:
   # identity:
   #
   interactive-sections: []
-  #  - storage
   apt:
     disable_components: []
     geoip: true
@@ -87,16 +89,10 @@ autoinstall:
     # renderer: NetworkManager
   storage:
     # https://curtin.readthedocs.io/en/latest/topics/storage.html
-    #
-    # Auto partitions configuration
-    #
-    # layout:
-    #   name: lvm
-    #
     config:
     - ptable: gpt
       path: /dev/sda
-      wipe: superblock
+      wipe: superblock-recursive
       preserve: false
       name: ''
       grub_device: false
@@ -115,7 +111,7 @@ autoinstall:
       volume: partition-0
       preserve: false
       type: format
-      id: format-1
+      id: format-0
     - device: disk-sda
       size: 536870912
       wipe: superblock
@@ -129,9 +125,9 @@ autoinstall:
       volume: partition-1
       preserve: false
       type: format
-      id: format-2
+      id: format-1
     - device: disk-sda
-      size: 49873420288
+      size: 32693551104
       wipe: superblock
       flag: ''
       number: 3
@@ -146,9 +142,20 @@ autoinstall:
       type: lvm_volgroup
       id: lvm_volgroup-0
     - name: lv-tmp
-      # `/tmp`
       volgroup: lvm_volgroup-0
-      size: 3221225472B # 3G
+      size: 3G
+      wipe: superblock
+      preserve: false
+      type: lvm_partition
+      id: lvm_partition-0
+    - fstype: btrfs
+      volume: lvm_partition-0
+      preserve: false
+      type: format
+      id: format-2
+    - name: lv-root
+      volgroup: lvm_volgroup-0
+      size: 17G
       wipe: superblock
       preserve: false
       type: lvm_partition
@@ -157,11 +164,14 @@ autoinstall:
       volume: lvm_partition-1
       preserve: false
       type: format
-      id: format-4
-    - name: lv-root
-      # `/`
+      id: format-3
+    - path: /
+      device: format-3
+      type: mount
+      id: mount-3
+    - name: lv-home
       volgroup: lvm_volgroup-0
-      size: 35433480192B # 33G
+      size: -1
       wipe: superblock
       preserve: false
       type: lvm_partition
@@ -170,47 +180,30 @@ autoinstall:
       volume: lvm_partition-2
       preserve: false
       type: format
-      id: format-5
-    - path: /
-      device: format-5
+      id: format-4
+    - path: /home
+      device: format-4
       type: mount
       id: mount-4
-    - name: lv-home
-      # `/home`
-      volgroup: lvm_volgroup-0
-      size: -1 # to end of VG free space
-      wipe: superblock
-      preserve: false
-      type: lvm_partition
-      id: lvm_partition-3
-    - fstype: btrfs
-      volume: lvm_partition-3
-      preserve: false
-      type: format
-      id: format-6
-    - path: /home
-      device: format-6
-      type: mount
-      id: mount-5
     - path: /boot
-      device: format-2
+      device: format-1
       type: mount
       id: mount-1
     - path: /tmp
-      device: format-4
+      device: format-2
       type: mount
-      id: mount-3
+      id: mount-2
     - path: /boot/efi
-      device: format-1
+      device: format-0
       type: mount
       id: mount-0
     swap:
       # https://curtin.readthedocs.io/en/latest/topics/config.html#swap
       swap: 0
       filename: swap.img
-      maxsize: 2097152 # size in bytes by default
+      maxsize: 2G # size in bytes by default
       # "auto" or size in bytes, setting 'size' to 0 will disable swap
-      size: 0
+      size: 1G
       force: false
   resize_rootfs: true
   mounts: []
@@ -242,19 +235,10 @@ autoinstall:
     - jq
     - less
     - nano
-    - netcat
     - open-vm-tools
     - zsh
     - parted
-  snaps:
-    # A list of snaps to install (for test purposes)
-    # https://snapcraft.io/
-    - name: aws-cli
-      channel: v2/edge # <['stable', ['edge'], ['beta']>
-      classic: false
-    - name: powershell
-      channel: latest/stable
-      classic: true
+  snaps: []
   late-commands:
     # `apt` commands
     # Optional. All packages installation command moved to 'packages:' directive
@@ -272,16 +256,6 @@ autoinstall:
     - echo '[ Done ]'
     # `sudoers` commands
     - echo 'sudoers file creation for user - ubuntu...'
-    # Rewritten to a `cat` multiline command
-    #
-    # - "echo '# sudoers file for default system user - ubuntu' > /target/etc/sudoers.d/00-ubuntu"
-    # - "sed -i -e '$a #' /target/etc/sudoers.d/100-ubuntu"
-    # - "sed -i -e '$a # ubuntu - User privilege specification' /target/etc/sudoers.d/100-ubuntu"
-    # - "sed -i -e '$a # Cmnd (Cmd for 1.9+) alias specification (disable - sudo su - command)' /target/etc/sudoers.d/100-ubuntu"
-    # - "sed -i -e '$a Cmd_Alias NO_SU = /usr/bin/su' /target/etc/sudoers.d/100-ubuntu"
-    # - "sed -i -e '$a Cmd_Alias NO_ROOTPW = /usr/bin/passwd [A-Za-z]*, !/usr/bin/passwd *root*' /target/etc/sudoers.d/100-ubuntu"
-    # - "sed -i -e '$a # ubuntu - User privilege specification' /target/etc/sudoers.d/100-ubuntu"
-    # - "sed -i -e '$a ubuntu ALL=(ALL:ALL) NOPASSWD:ALL, !NO_SU, NO_ROOTPW' /target/etc/sudoers.d/100-ubuntu"
     - |
         cat > /target/etc/sudoers.d/100-ubuntu <<EOF
         # File created with autoinstall. Timestamp: $(date +%H%M.%F@%T%Z)
@@ -306,12 +280,6 @@ autoinstall:
     - echo '[ Done ]'
     # `sshd` commands
     - echo 'updating sshd configuration...'
-    # Disabled to not change default system files
-    #
-    # - 'sed -i.~ -e "s|^#PermitRootLogin.*|PermitRootLogin no|" /target/etc/ssh/sshd_config'
-    # - 'sed -i -e "s/^#PermitEmptyPasswords.*/PermitEmptyPasswords no/" /target/etc/ssh/sshd_config'
-    # - 'sed -i -e "s/^#PubkeyAuthentication.*/PubkeyAuthentication yes/" /target/etc/ssh/sshd_config'
-    #
     - |
         cat > /target/etc/ssh/sshd_config.d/100-autoinstall.conf <<EOF
         # File created with autoinstall. Timestamp: $(date +%H%M.%F@%T%Z)
@@ -362,7 +330,7 @@ autoinstall:
           cat > /etc/hosts <<EOF
           # File created with autoinstall. Timestamp: ${timestamp}
           127.0.0.1 localhost
-          127.0.1.1 ${fqdn_string} ${HOSTNAME}
+          127.0.1.1 ${HOSTNAME}
 
           # The following lines are desirable for IPv6 capable hosts
           ::1 localhost ip6-localhost ip6-loopback

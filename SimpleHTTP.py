@@ -39,8 +39,18 @@ class HTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         """Serve a `GET` request. Interpreting the request as a path"""
 
         self.send_response(200, "OK")  # HTTPStatus.OK
+        # Sends the response header only, used for the purposes when
+        # `100 Continue` response is sent by the server to the client.
+        #
+        # self.send_response_only(200, "OK")
+
+        # Disabled. The HTTP header is not be writen to the outgoing
+        # stream
+        #
         # self.send_header("Content-type", "text/html")
-        self.end_headers()
+        #
+        # Must be called in order to complete the operation send_header()
+        # self.end_headers()
 
         return http.server.SimpleHTTPRequestHandler.do_GET(self)
 
