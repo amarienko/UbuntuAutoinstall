@@ -51,5 +51,5 @@ PRE-INSTALLED PACKAGES
  nano
  netcat
  open-vm-tools
- zsh
  parted
+ zsh

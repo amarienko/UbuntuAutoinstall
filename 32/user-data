@@ -236,8 +236,9 @@ autoinstall:
     - less
     - nano
     - open-vm-tools
-    - zsh
     - parted
+    - zip
+    - zsh
   snaps: []
   late-commands:
     # `apt` commands

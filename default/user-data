@@ -117,8 +117,8 @@ autoinstall:
     - nano
     - netcat
     - open-vm-tools
-    - zsh
     - parted
+    - zsh
   # A list of snaps to install (for test purposes)
   snaps: []
   late-commands:
