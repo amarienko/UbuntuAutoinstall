@@ -1,0 +1,18 @@
+#cloud-config
+autoinstall:
+  storage:
+    # https://curtin.readthedocs.io/en/latest/topics/storage.html
+    #
+    # Auto partitions configuration
+    #
+    layout:
+      name: lvm
+    swap:
+      # https://curtin.readthedocs.io/en/latest/topics/config.html#swap
+      swap: 0
+      filename: swap.img
+      maxsize: 2G # size in bytes by default
+      # "auto" or size in bytes, setting 'size' to 0 will disable swap
+      size: 1G
+      force: false
+  version: 1
