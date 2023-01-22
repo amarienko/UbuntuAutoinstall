@@ -50,5 +50,6 @@ PRE-INSTALLED PACKAGES
  less
  nano
  open-vm-tools
- zsh
  parted
+ zip
+ zsh
