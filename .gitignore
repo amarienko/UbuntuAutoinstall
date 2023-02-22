@@ -46,7 +46,7 @@ Thumbs.db
 *.mov
 *.wmv
 
-# macOS Generated Files
+# macOS enerated files
 # (. Desktop Services_Store) A macOS file that is created by Finder in every folder
 # to hold the user's folder view preferences.
 *.DS_Store
@@ -58,3 +58,8 @@ Thumbs.db
 *.tmp
 *.bak
 *~
+
+# Custom configuration files
+custom/meta-*
+custom/user-*
+custom/vendor-*

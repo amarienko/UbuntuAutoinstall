@@ -100,7 +100,7 @@ def main():
         "--disk-size",
         action="store",
         required=False,
-        choices=["default", "32", "48", "72"],
+        choices=["default", "32", "48", "72", "custom"],
         default="default",
         dest="diskSize",
         metavar="DISK_SIZE",

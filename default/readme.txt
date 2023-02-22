@@ -45,11 +45,10 @@ Swap:           2946           0        2946
 
 PRE-INSTALLED PACKAGES
 
- git
- jq
  less
  nano
  netcat
  open-vm-tools
  parted
+ psmisc
  zsh

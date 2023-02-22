@@ -2,7 +2,7 @@ INSTANCE CONFIGURATION
 
 - 48GB storage/disk size
 - No `swap` partition. A swap file is created with an initial
-  size of 1GB and a maximum size of 2GB
+  size of 256MB and a maximum size of 2GB
 
 PARTITION TABLE DETAILS
 
@@ -40,7 +40,7 @@ SWAP
 
 Name:   /swap.img
 Type:   file
-Size:   1024M
+Size:   256M
 
 
 PRE-INSTALLED PACKAGES
@@ -51,5 +51,10 @@ PRE-INSTALLED PACKAGES
  nano
  open-vm-tools
  parted
+ psmisc
  zip
  zsh
+
+PRE-INSTALLED SNAPS
+
+ certbot
